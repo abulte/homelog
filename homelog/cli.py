@@ -1,6 +1,13 @@
+import os
+
+from datetime import datetime
+
+import httpx
+
 from minicli import cli, run
 
 from homelog import database
+from homelog.models import Measurement
 from homelog.notify import send
 
 db = database.connect()
@@ -30,6 +37,35 @@ def notify_temp_cross():
     # crosses chambre and first cross
     if last_chambre["value"] >= last_patio["value"] and before_last_chambre["value"] < before_last_patio["value"]:
         send("T° chambre dépasse la température extérieure", f"{last_chambre['value']} vs {last_patio['value']}")
+
+
+@cli
+def sync_weather():
+    created_at = datetime.utcnow()
+
+    attrs = [
+        "temp_c", "condition.code", "wind_kph", "wind_degree", "pressure_mb", "precip_mm",
+        "humidity", "cloud", "feelslike_c", "vis_km", "uv", "gust_kph",
+        "air_quality.co", "air_quality.no2", "air_quality.o3", "air_quality.so2", "air_quality.pm2_5",
+        "air_quality.pm10", "air_quality.us-epa-index", "air_quality.gb-defra-index",
+    ]
+
+    url = f"http://api.weatherapi.com/v1/current.json?key={os.getenv('WEATHERAPI_KEY')}&q=Poissy, France&aqi=yes"
+    r = httpx.get(url)
+    r.raise_for_status()
+
+    table = db.get_table("weather")
+
+    r_data = r.json()["current"]
+    for attr in attrs:
+        if len(splitted := attr.split(".")) > 1:
+            value = r_data.get(splitted[0], {}).get(splitted[1])
+        else:
+            value = r_data.get(attr)
+        if value is None:
+            print(f"Missing value for {attr}")
+        else:
+            table.insert(Measurement(value=value, measurement=attr, created_at=created_at).dict())
 
 
 if __name__ == "__main__":

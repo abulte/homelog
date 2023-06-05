@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, render_template, abort
 from werkzeug.datastructures import MultiDict
 
 from homelog import database
+from homelog.models import Measurement
 
 
 app = Flask(__name__)
@@ -73,9 +74,10 @@ def api_model(model):
         app.logger.error(msg)
         return jsonify({"error": msg}), 400
     for k, v in data.items():
-        table.insert({
-            "value": float(v),
-            "measurement": str(k),
+        measurement = Measurement(**{
+            "value": v,
+            "measurement": k,
             "created_at": created_at,
         })
+        table.insert(measurement.dict())
     return jsonify({"error": None}), 201
