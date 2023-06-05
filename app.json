@@ -1,0 +1,8 @@
+{
+    "cron": [
+        {
+        "command": "homelog notify_temp_cross",
+        "schedule": "*/5 * * * *"
+        }
+    ]
+}
