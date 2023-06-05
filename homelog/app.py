@@ -2,16 +2,14 @@ import os
 
 from datetime import datetime
 
-import dataset
-
 from flask import Flask, request, jsonify
+
+from homelog import database
 
 
 app = Flask(__name__)
 
-db_url = os.getenv("DATABASE_URL")
-db_url = db_url.replace("postgres://", "postgresql://")
-db = dataset.connect(db_url, sqlite_wal_mode=False)
+db = database.connect()
 
 
 @app.before_request
@@ -22,7 +20,7 @@ def check_api_key():
 
 
 @app.route("/api/<model>", methods=["POST"])
-def api_temperature(model):
+def api_model(model):
     data = request.json
     if not data:
         msg = "No JSON data"

@@ -310,6 +310,21 @@ files = [
 ]
 
 [[package]]
+name = "minicli"
+version = "0.5.1"
+description = "Minimalist CLI"
+optional = false
+python-versions = "*"
+files = [
+    {file = "minicli-0.5.1-py3-none-any.whl", hash = "sha256:70719607a4aa1028ee3156d48fd2f148c2db598f17e4efd20e6cbb3af568244d"},
+    {file = "minicli-0.5.1.tar.gz", hash = "sha256:351027dd0cd71d7fb321ffa8ff94e7b2eddc5eac749996d03b330afe3e9b0d09"},
+]
+
+[package.extras]
+doc = ["mkdocs (==1.1.2)"]
+test = ["pytest (==7.1.2)"]
+
+[[package]]
 name = "psycopg2-binary"
 version = "2.9.6"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
@@ -501,4 +516,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "456556bb7c59514216f5a9cbf3783f607439aa8108810973c7dd267595542748"
+content-hash = "2615341b0988f75c5afc73472d85496f929ce730b0d7204f309015fe824b687b"

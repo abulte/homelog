@@ -11,7 +11,10 @@ Flask = "^2.3.2"
 dataset = "^1.6.0"
 gunicorn = "^20.1.0"
 psycopg2-binary = "^2.9.6"
+minicli = "^0.5.1"
 
+[tool.poetry.scripts]
+homelog = "homelog.cli:run"
 
 [build-system]
 requires = ["poetry-core"]
