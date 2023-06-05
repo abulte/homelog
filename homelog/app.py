@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 from flask import Flask, request, jsonify, render_template, abort
+from werkzeug.datastructures import MultiDict
 
 from homelog import database
 
@@ -17,12 +18,30 @@ def format_datetime(value: datetime):
     return value.strftime("%Y-%m-%d %H:%M")
 
 
+def compute_filters(request_args: MultiDict, columns: list) -> dict:
+    """Filters in args like `measurement=value`, `created_at__gt=value`..."""
+    filters = {}
+    for k, v in request_args.items():
+        if not any(k.startswith(c) for c in columns):
+            pass
+        if len(splitted := k.split("__")) > 1:
+            if splitted[0] in filters:
+                filters[splitted[0]][splitted[1]] = v
+            else:
+                filters[splitted[0]] = {splitted[1]: v}
+        else:
+            filters[k] = v
+    app.logger.debug(f"filters: {filters}")
+    return filters
+
+
 @app.route("/<model>/table")
 def model_table(model):
     if model not in db.tables:
         abort(404)
     table = db.get_table(model)
-    records = table.find(order_by="-created_at")
+    filters = compute_filters(request.args, table.columns)
+    records = table.find(**filters, order_by="-created_at")
     return render_template("table.html.j2", records=records)
 
 
