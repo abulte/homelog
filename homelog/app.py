@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 db_url = os.getenv("DATABASE_URL")
-db_url = db_url.replace("postgres:", "postgresql:")
+db_url = db_url.replace("postgres://", "postgresql://")
 db = dataset.connect(db_url, sqlite_wal_mode=False)
 
 
