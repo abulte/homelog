@@ -2,7 +2,7 @@ import os
 
 from datetime import datetime
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, abort
 
 from homelog import database
 
@@ -12,11 +12,28 @@ app = Flask(__name__)
 db = database.connect()
 
 
+@app.template_filter("datetime")
+def datetime(value: datetime):
+    return value.strftime("%Y-%M-%d %H:%m")
+
+
+@app.route("/<model>/table")
+def model_table(model):
+    if model not in db.tables:
+        abort(404)
+    table = db.get_table(model)
+    records = table.find(order_by="-created_at")
+    return render_template("table.html.j2", records=records)
+
+
 @app.before_request
 def check_api_key():
-    api_key = request.headers.get("x-api-key")
-    if api_key != os.getenv("HOMELOG_API_KEY"):
-        return jsonify({"error": "Unauthorized"}), 401
+    if not request.endpoint:
+        return
+    elif request.endpoint.startswith("api_"):
+        api_key = request.headers.get("x-api-key")
+        if api_key != os.getenv("HOMELOG_API_KEY"):
+            return jsonify({"error": "Unauthorized"}), 401
 
 
 @app.route("/api/<model>", methods=["POST"])

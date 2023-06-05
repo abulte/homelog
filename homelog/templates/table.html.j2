@@ -1,0 +1,22 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Mesure</th>
+      <th>Valeur</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for record in records %}
+    <tr>
+      <td>{{record.created_at|datetime}}</td>
+      <td>{{record.measurement}}</td>
+      <td>{{record.value}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}
