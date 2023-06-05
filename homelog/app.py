@@ -2,7 +2,7 @@ import os
 
 from datetime import datetime
 
-from flask import Flask, request, jsonify, render_template, abort
+from flask import Flask, request, jsonify, render_template, abort, Response
 from werkzeug.datastructures import MultiDict
 
 from homelog import database
@@ -44,6 +44,24 @@ def model_table(model):
     filters = compute_filters(request.args, table.columns)
     records = table.find(**filters, order_by="-created_at")
     return render_template("table.html.j2", records=records)
+
+
+@app.route("/<model>/csv")
+def model_csv(model):
+    if model not in db.tables:
+        abort(404)
+    table = db.get_table(model)
+    filters = compute_filters(request.args, table.columns)
+    records = table.find(**filters, order_by="-created_at")
+
+    def iter_csv(records):
+        yield "created_at,measurement,value\n"
+        for r in records:
+            yield f"{r['created_at']},{r['measurement']},{r['value']}\n"
+
+    response = Response(iter_csv(records), mimetype="text/csv")
+    response.headers["Content-Disposition"] = f"attachment; filename={model}.csv"
+    return response
 
 
 @app.before_request
