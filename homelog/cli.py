@@ -31,11 +31,11 @@ def notify_temp_cross():
         return
 
     # crosses salon and first cross
-    if last_salon["value"] >= last_patio["value"] and before_last_salon["value"] < before_last_patio["value"]:
+    if last_salon["value"] >= last_patio["value"] and before_last_salon["value"] <= before_last_patio["value"]:
         send("T° salon dépasse la température extérieure", f"{last_salon['value']} vs {last_patio['value']}")
 
     # crosses chambre and first cross
-    if last_chambre["value"] >= last_patio["value"] and before_last_chambre["value"] < before_last_patio["value"]:
+    if last_chambre["value"] >= last_patio["value"] and before_last_chambre["value"] <= before_last_patio["value"]:
         send("T° chambre dépasse la température extérieure", f"{last_chambre['value']} vs {last_patio['value']}")
 
 
