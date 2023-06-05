@@ -13,7 +13,7 @@ db = database.connect()
 
 
 @app.template_filter("datetime")
-def datetime(value: datetime):
+def format_datetime(value: datetime):
     return value.strftime("%Y-%m-%d %H:%M")
 
 
