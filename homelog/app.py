@@ -1,8 +1,13 @@
+import base64
 import os
 
 from datetime import datetime
+from io import BytesIO
+
+import pandas as pd
 
 from flask import Flask, request, jsonify, render_template, abort, Response
+from matplotlib.figure import Figure
 from werkzeug.datastructures import MultiDict
 
 from homelog import database
@@ -44,6 +49,25 @@ def model_table(model):
     filters = compute_filters(request.args, table.columns)
     records = table.find(**filters, order_by="-created_at")
     return render_template("table.html.j2", records=records)
+
+
+@app.route("/<model>/plot")
+def model_plot(model):
+    if model not in db.tables:
+        abort(404)
+    table = db.get_table(model)
+    filters = compute_filters(request.args, table.columns)
+    records = table.find(**filters, order_by="-created_at")
+    df = pd.DataFrame(records)
+    fig = Figure()
+    ax = fig.subplots()
+    df.set_index("created_at").groupby("measurement")["value"].plot(
+        title=f"{model}({filters})", legend=True, ax=ax, figsize=(10, 5)
+    )
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    return f"<img src='data:image/png;base64,{data}'/>"
 
 
 @app.route("/<model>/csv")
