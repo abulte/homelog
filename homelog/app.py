@@ -27,7 +27,7 @@ def format_datetime(value: datetime):
 def compute_filters(request_args: MultiDict, columns: list) -> dict:
     """Filters in args like `measurement=value`, `created_at__gt=value`..."""
     filters = {}
-    for k, v in request_args.items():
+    for k, v in request_args.items(multi=True):
         if not any(k.startswith(c) for c in columns):
             pass
         if len(splitted := k.split("__")) > 1:
@@ -36,7 +36,10 @@ def compute_filters(request_args: MultiDict, columns: list) -> dict:
             else:
                 filters[splitted[0]] = {splitted[1]: v}
         else:
-            filters[k] = v
+            if k in filters:
+                filters[k]["in"].append(v)
+            else:
+                filters[k] = {"in": [v]}
     app.logger.debug(f"filters: {filters}")
     return filters
 
