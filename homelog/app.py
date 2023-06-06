@@ -93,12 +93,20 @@ def model_csv(model):
 
 @app.before_request
 def check_api_key():
+    """
+    WARNING: only protects endpoint methods starting with `api_`
+    """
     if not request.endpoint:
         return
     elif request.endpoint.startswith("api_"):
         api_key = request.headers.get("x-api-key")
         if api_key != os.getenv("HOMELOG_API_KEY"):
             return jsonify({"error": "Unauthorized"}), 401
+
+
+@app.route("/api/status")
+def unprotected_api_status():
+    return jsonify({"status": "ok"})
 
 
 @app.route("/api/<model>", methods=["POST"])
