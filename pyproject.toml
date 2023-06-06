@@ -20,6 +20,10 @@ matplotlib = "^3.7.1"
 [tool.poetry.scripts]
 homelog = "homelog.cli:run"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+pytest-flask = "^1.2.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -6,7 +6,7 @@ from io import BytesIO
 
 import pandas as pd
 
-from flask import Flask, request, jsonify, render_template, abort, Response
+from flask import Flask, request, jsonify, render_template, abort, Response, g
 from matplotlib.figure import Figure
 from werkzeug.datastructures import MultiDict
 
@@ -16,7 +16,11 @@ from homelog.models import Measurement
 
 app = Flask(__name__)
 
-db = database.connect()
+
+@app.before_request
+def connect_db():
+    if not g.get("db"):
+        g.db = database.connect()
 
 
 @app.template_filter("datetime")
@@ -46,9 +50,9 @@ def compute_filters(request_args: MultiDict, columns: list) -> dict:
 
 @app.route("/<model>/table")
 def model_table(model):
-    if model not in db.tables:
+    if model not in g.db.tables:
         abort(404)
-    table = db.get_table(model)
+    table = g.db.get_table(model)
     filters = compute_filters(request.args, table.columns)
     records = table.find(**filters, order_by="-created_at")
     return render_template("table.html.j2", records=records)
@@ -56,9 +60,9 @@ def model_table(model):
 
 @app.route("/<model>/plot")
 def model_plot(model):
-    if model not in db.tables:
+    if model not in g.db.tables:
         abort(404)
-    table = db.get_table(model)
+    table = g.db.get_table(model)
     filters = compute_filters(request.args, table.columns)
     records = table.find(**filters, order_by="-created_at")
     df = pd.DataFrame(records)
@@ -75,9 +79,9 @@ def model_plot(model):
 
 @app.route("/<model>/csv")
 def model_csv(model):
-    if model not in db.tables:
+    if model not in g.db.tables:
         abort(404)
-    table = db.get_table(model)
+    table = g.db.get_table(model)
     filters = compute_filters(request.args, table.columns)
     records = table.find(**filters, order_by="-created_at")
 
@@ -118,7 +122,7 @@ def api_model(model):
         return jsonify({"error": msg}), 400
     app.logger.debug(model)
     app.logger.debug(data)
-    table = db.get_table(model)
+    table = g.db.get_table(model)
     created_at = datetime.utcnow()
     try:
         data = {k: float(v) for k, v in data.items()}
