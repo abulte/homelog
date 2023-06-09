@@ -1,6 +1,22 @@
 {% extends "base.html.j2" %}
 
+{% block inline_css %}
+.mini-header {
+  text-align: center;
+}
+.mini-header > nav > a {
+  margin: 0 0.5rem 0 0.5rem;
+}
+{% endblock inline_css %}
+
 {% block content %}
+<div class="mini-header">
+  <nav>
+    <a href="/{{model}}/table?created_at__gt={{utcnow().date().isoformat()}}">Today</a>
+    <a href="csv?{{request.query_string.decode()}}">CSV</a>
+    <a href="plot?{{request.query_string.decode()}}">Chart</a>
+  </nav>
+</div>
 <table>
   <thead>
     <tr>

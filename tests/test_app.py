@@ -13,7 +13,7 @@ from homelog.app import app as flask_app
 @pytest.fixture(autouse=True)
 def mock_db(monkeypatch):
     # don't use :memory: because we don't have a db singleton
-    monkeypatch.setenv("DATABASE_URL", "sqlite:///test.db")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///_test.db")
     yield
     if (db_path := Path("test.db")).exists():
         db_path.unlink()
@@ -54,6 +54,5 @@ def test_api_model(client):
     r = post_measurement(client, json={"measurement": 1})
     assert r.status_code == 201
     db = database.connect()
-    print(db.tables)
     records = list(db["test_model"].all())
     assert len(records) == 1

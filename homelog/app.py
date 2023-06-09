@@ -28,6 +28,11 @@ def format_datetime(value: datetime):
     return value.strftime("%Y-%m-%d %H:%M")
 
 
+@app.context_processor
+def inject_globals():
+    return dict(utcnow=datetime.utcnow)
+
+
 def compute_filters(request_args: MultiDict, columns: list) -> dict:
     """Filters in args like `measurement=value`, `created_at__gt=value`..."""
     filters = {}
@@ -55,7 +60,7 @@ def model_table(model):
     table = g.db.get_table(model)
     filters = compute_filters(request.args, table.columns)
     records = table.find(**filters, order_by="-created_at")
-    return render_template("table.html.j2", records=records)
+    return render_template("table.html.j2", records=records, model=model)
 
 
 @app.route("/<model>/plot")
@@ -66,6 +71,8 @@ def model_plot(model):
     filters = compute_filters(request.args, table.columns)
     records = table.find(**filters, order_by="-created_at")
     df = pd.DataFrame(records)
+    if df.empty:
+        return "No data", 404
     fig = Figure()
     ax = fig.subplots()
     df.set_index("created_at").groupby("measurement")["value"].plot(
