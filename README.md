@@ -55,7 +55,7 @@ URL: `/{model}/csv`
 
 ### Line plot
 
-URL: `/{model}/table`
+URL: `/{model}/plot`
 
 ![](img/homelog-plot.png)
 
