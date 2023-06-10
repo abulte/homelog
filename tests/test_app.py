@@ -15,7 +15,7 @@ def mock_db(monkeypatch):
     # don't use :memory: because we don't have a db singleton
     monkeypatch.setenv("DATABASE_URL", "sqlite:///_test.db")
     yield
-    if (db_path := Path("test.db")).exists():
+    if (db_path := Path("_test.db")).exists():
         db_path.unlink()
 
 

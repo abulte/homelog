@@ -14,7 +14,7 @@ from homelog.notify import send
 @cli
 def notify_temp_cross():
     """Notify when outside temperature crosses inside's when going down"""
-    db = database.connect()
+    db = database.get()
     table = db.get_table("temperature")
 
     last_salon = table.find_one(measurement="salon", _limit=1, _offset=0, order_by="-created_at")
@@ -40,7 +40,7 @@ def notify_temp_cross():
 
 @cli
 def sync_weather():
-    db = database.connect()
+    db = database.get()
     created_at = datetime.utcnow()
 
     attrs = [
