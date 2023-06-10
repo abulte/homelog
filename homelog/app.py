@@ -5,14 +5,24 @@ from datetime import datetime
 from io import BytesIO
 
 import pandas as pd
+import sentry_sdk
 
 from flask import Flask, request, jsonify, render_template, abort, Response
 from matplotlib.figure import Figure
+from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.datastructures import MultiDict
 
 from homelog import database
 from homelog.models import Measurement
 
+
+if sentry_dsn := os.getenv("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        integrations=[
+            FlaskIntegration(),
+        ],
+    )
 
 app = Flask(__name__)
 

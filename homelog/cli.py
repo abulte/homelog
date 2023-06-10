@@ -3,12 +3,19 @@ import os
 from datetime import datetime
 
 import httpx
+import sentry_sdk
 
 from minicli import cli, run
 
 from homelog import database
 from homelog.models import Measurement
 from homelog.notify import send
+
+
+if sentry_dsn := os.getenv("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+    )
 
 
 @cli
