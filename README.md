@@ -32,12 +32,22 @@ content-type: application/json
 x-api-key: {env.HOMELOG_API_KEY}
 ```
 
-Request:
+Request (automatic `created_at`):
 
 ```json
 {
     "measurement": "{my_measurement}",
     "value": {floatable_value}
+}
+```
+
+Request (custom `created_at`, expected to be UTC by default):
+
+```json
+{
+    "measurement": "{my_measurement}",
+    "value": {floatable_value},
+    "created_at": "2023-06-13T13:07:49.293213"
 }
 ```
 

@@ -3,6 +3,7 @@ import os
 
 from datetime import datetime
 from io import BytesIO
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import sentry_sdk
@@ -27,9 +28,11 @@ if sentry_dsn := os.getenv("SENTRY_DSN"):
 app = Flask(__name__)
 
 
-@app.template_filter("datetime")
-def format_datetime(value: datetime):
-    return value.strftime("%Y-%m-%d %H:%M")
+@app.template_filter("local_datetime")
+def to_local_datetime(value: datetime):
+    # NB: utc timezone is attached to date in Measurement model
+    tzinfo = ZoneInfo(os.getenv("HOMELOG_TZ"))
+    return value.astimezone(tzinfo).strftime("%Y-%m-%d %H:%M")
 
 
 @app.context_processor
@@ -64,7 +67,7 @@ def model_table(model):
         abort(404)
     table = db.get_table(model)
     filters = compute_filters(request.args, table.columns)
-    records = table.find(**filters, order_by="-created_at")
+    records = Measurement.query(model, **filters, order_by="-created_at")
     return render_template("table.html.j2", records=records, model=model)
 
 
@@ -75,13 +78,15 @@ def model_plot(model):
         abort(404)
     table = db.get_table(model)
     filters = compute_filters(request.args, table.columns)
-    records = table.find(**filters, order_by="-created_at")
-    df = pd.DataFrame(records)
+    records = Measurement.query(model, **filters, order_by="-created_at")
+    df = pd.DataFrame([r.dict() for r in records])
+    df = df.set_index("created_at")
+    df.index = df.index.tz_convert(os.getenv("HOMELOG_TZ"))
     if df.empty:
         return "No data", 404
     fig = Figure()
     ax = fig.subplots()
-    df.set_index("created_at").groupby("measurement")["value"].plot(
+    df.groupby("measurement")["value"].plot(
         title=f"{model}({filters})", legend=True, ax=ax, figsize=(10, 5)
     )
     buf = BytesIO()
@@ -138,7 +143,10 @@ def api_model(model):
     app.logger.debug(model)
     app.logger.debug(data)
     table = db.get_table(model)
-    created_at = datetime.utcnow()
+    if created_at := data.pop("created_at", None):
+        created_at = datetime.fromisoformat(created_at)
+    else:
+        created_at = datetime.utcnow()
     try:
         data = {k: float(v) for k, v in data.items()}
     except ValueError as e:

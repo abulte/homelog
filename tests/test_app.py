@@ -1,5 +1,6 @@
 import os
 
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -56,3 +57,13 @@ def test_api_model(client):
     db = database.connect()
     records = list(db["test_model"].all())
     assert len(records) == 1
+
+    # send valid value with created_at
+    created_at = datetime(2020, 12, 31)
+    r = post_measurement(client, json={"measurement": 2, "created_at": created_at.isoformat()})
+    assert r.status_code == 201
+    db = database.connect()
+    print(list(db["test_model"].all()))
+    records = list(db["test_model"].find(value=2.0))
+    assert len(records) == 1
+    assert records[0]["created_at"].year == 2020

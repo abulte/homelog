@@ -28,7 +28,7 @@
   <tbody>
     {% for record in records %}
     <tr>
-      <td>{{record.created_at|datetime}}</td>
+      <td>{{record.created_at|local_datetime}}</td>
       <td>{{record.measurement}}</td>
       <td>{{record.value}}</td>
     </tr>
