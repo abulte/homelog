@@ -67,6 +67,10 @@ URL: `/{model}/csv`
 
 URL: `/{model}/plot`
 
+Extras request arguments:
+- `_kind={kind}`, defaults to `line`: pass `{kind}` to `df.plot()`, e.g. `bar` — no effect when using `_resample`
+- `_resample={rule}`, defaults to `None`: pass [`{rule}`](https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases) to [`df.resample`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.resample.html), e.g. `W` — `mean()` is used for resampling aggregation
+
 ![](img/homelog-plot.png)
 
 ### Filters

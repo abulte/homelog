@@ -45,7 +45,7 @@ def compute_filters(request_args: MultiDict, columns: list) -> dict:
     filters = {}
     for k, v in request_args.items(multi=True):
         if not any(k.startswith(c) for c in columns):
-            pass
+            continue
         if len(splitted := k.split("__")) > 1:
             if splitted[0] in filters:
                 filters[splitted[0]][splitted[1]] = v
@@ -77,21 +77,32 @@ def model_plot(model):
     if model not in db.tables:
         abort(404)
     table = db.get_table(model)
+
+    plot_kind = request.args.get("_kind", "line")
+    resample_freq = request.args.get("_resample")
+
     filters = compute_filters(request.args, table.columns)
     records = Measurement.query(model, **filters, order_by="-created_at")
+
     df = pd.DataFrame([r.dict() for r in records])
     df = df.set_index("created_at")
     df.index = df.index.tz_convert(os.getenv("HOMELOG_TZ"))
     if df.empty:
         return "No data", 404
+
     fig = Figure()
     ax = fig.subplots()
-    df.groupby("measurement")["value"].plot(
-        title=f"{model}({filters})", legend=True, ax=ax, figsize=(10, 5)
-    )
+    if resample_freq:
+        df_resampled = df.groupby("measurement").resample(resample_freq).mean()
+        df_resampled.unstack(level=0).plot(kind="bar", ax=ax, figsize=(10, 5))
+    else:
+        df.groupby("measurement")["value"].plot(
+            title=f"{model}({filters})", legend=True, ax=ax, figsize=(10, 5), kind=plot_kind,
+        )
     buf = BytesIO()
-    fig.savefig(buf, format="png")
+    fig.savefig(buf, format="png", bbox_inches="tight")
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
+
     return f"<img src='data:image/png;base64,{data}'/>"
 
 
