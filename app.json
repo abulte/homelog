@@ -1,10 +1,6 @@
 {
   "cron": [
     {
-      "command": "python /app/homelog/cli.py notify_temp_cross",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "command": "python /app/homelog/cli.py sync_weather",
       "schedule": "42 * * * *"
     }
