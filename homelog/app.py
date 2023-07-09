@@ -1,14 +1,14 @@
 import base64
 import os
 
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from io import BytesIO
 from zoneinfo import ZoneInfo
 
 import pandas as pd
 import sentry_sdk
 
-from flask import Flask, request, jsonify, render_template, abort, Response
+from flask import Flask, request, jsonify, render_template, abort, Response, redirect, url_for
 from matplotlib.figure import Figure
 from sentry_sdk.integrations.flask import FlaskIntegration
 from werkzeug.datastructures import MultiDict
@@ -65,10 +65,18 @@ def model_table(model):
     db = database.get()
     if model not in db.tables:
         abort(404)
+    # apply a default filter for created_at > today if none given
+    if not any(arg.startswith("created_at") for arg in request.args.keys()):
+        created_at = date.today()
+        return redirect(url_for("model_table", model=model, created_at__gt=created_at, **request.args))
     table = db.get_table(model)
     filters = compute_filters(request.args, table.columns)
     records = Measurement.query(model, **filters, order_by="-created_at")
-    return render_template("table.html.j2", records=records, model=model)
+    return render_template("table.html.j2", records=records, model=model, dates={
+        "today": date.today().isoformat(),
+        "last_week": (date.today() - timedelta(days=7)).isoformat(),
+        "last_month": (date.today() - timedelta(days=30)).isoformat(),
+    })
 
 
 @app.route("/<model>/plot")

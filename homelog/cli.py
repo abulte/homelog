@@ -1,5 +1,7 @@
+import csv
 import os
 
+from io import StringIO
 from datetime import datetime
 
 import httpx
@@ -73,6 +75,23 @@ def sync_weather():
             print(f"Missing value for {attr}")
         else:
             table.insert(Measurement(value=value, measurement=attr, created_at=created_at).dict())
+
+
+@cli
+def import_data(table, remote="https://homelog.app.france.sh"):
+    """Import remote table to local through CSV"""
+    url = f"{remote}/{table}/csv"
+    r = httpx.get(url)
+    r.raise_for_status()
+    data = StringIO(r.text)
+    reader = csv.DictReader(data)
+
+    db = database.get()
+    if table in db.tables:
+        db[table].drop()
+
+    for row in reader:
+        db[table].insert(row)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import os
 
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 
 import pytest
@@ -26,11 +26,11 @@ def app():
     return flask_app
 
 
-def post_measurement(client, custom_headers=None, **kwargs):
+def post_measurement(client, custom_headers=None, model="test_model", **kwargs):
     default_headers = {"x-api-key": os.getenv("HOMELOG_API_KEY")}
     headers = custom_headers if custom_headers is not None else default_headers
     kwargs["headers"] = headers
-    return client.post(url_for("api_model", model="test_model"), **kwargs)
+    return client.post(url_for("api_model", model=model), **kwargs)
 
 
 def test_api_model(client):
@@ -79,3 +79,15 @@ def test_compute_filters():
         "col1": {"in": ["value1", "value1_bis"]},
         "col2": {"gt": "value2"},
     }
+
+
+def test_model_table(client):
+    post_measurement(client, json={"measurement": 2}, model="test_model_table")
+    response = client.get(url_for("model_table", model="test_model_table"), follow_redirects=True)
+    assert response.status_code == 200
+    # Check that there was one redirect response.
+    assert len(response.history) == 1
+    # Check that the second request was with created_at arg for today
+    assert response.request.path == "/test_model_table/table"
+    assert "created_at__gt" in response.request.args
+    assert response.request.args["created_at__gt"] == date.today().isoformat()

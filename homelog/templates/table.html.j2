@@ -9,10 +9,40 @@
 }
 {% endblock inline_css %}
 
+{% block inline_js %}
+<script>
+  const select = document.getElementById("time-filter")
+  select.addEventListener("change", (event) => {
+    const params = (new URL(document.location)).searchParams
+    switch (event.target.value) {
+      case "today":
+        params.set("created_at__gt", "{{dates.today}}")
+        break
+      case "last-week":
+        params.set("created_at__gt", "{{dates.last_week}}")
+        break
+      case "last-month":
+        params.set("created_at__gt", "{{dates.last_month}}")
+        break
+      case "all":
+        params.set("created_at__gt", "1970-01-01")
+        break
+    }
+    location.href = "/{{model}}/table?" + params.toString()
+  })
+</script>
+{% endblock inline_js %}
+
 {% block content %}
 <div class="mini-header">
   <nav>
-    <a href="/{{model}}/table?created_at__gt={{utcnow().date().isoformat()}}">Today</a>
+    <select id="time-filter">
+      <option value="" selected disabled>Time filter</option>
+      <option value="today">Today</option>
+      <option value="last-week">Last week</option>
+      <option value="last-month">Last month</option>
+      <option value="all">All</option>
+    </select>
     <a href="csv?{{request.query_string.decode()}}">CSV</a>
     <a href="plot?{{request.query_string.decode()}}">Chart</a>
   </nav>
